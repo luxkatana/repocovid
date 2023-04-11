@@ -1,9 +1,14 @@
 import sqlite3, requests
 import pandas as pd
 from datetime import datetime as dt
+from io  import StringIO
 def get_csv(url: str) -> pd.DataFrame:
     with requests.get(url) as response:
-        content = response.content
+        if response.status_code == 200:
+            content = response.content.decode()
+            return pd.read_csv(StringIO(content)).dropna()
+        else:
+            raise ValueError(f'status code -> {response.status_code}')
 def save_row(country: str,
              region: str,
              cases_total_cumulative_per100000: int,
@@ -37,7 +42,8 @@ def save_row(country: str,
               formatted_now,))
         conn.commit()
         cursor.close()
-data = pd.read_csv('sampledata.csv').dropna()
+print('getting the data')
+data = get_csv('https://covid19.who.int/WHO-COVID-19-global-table-data.csv')
 print('saving data, please wait')
 for _, row in data.iterrows():
     clean = row.tolist()[:-1:]
