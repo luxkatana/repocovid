@@ -1,5 +1,9 @@
-import sqlite3
+import sqlite3, requests
 import pandas as pd
+from datetime import datetime as dt
+def get_csv(url: str) -> pd.DataFrame:
+    with requests.get(url) as response:
+        content = response.content
 def save_row(country: str,
              region: str,
              cases_total_cumulative_per100000: int,
@@ -12,11 +16,12 @@ def save_row(country: str,
              deaths_newly_reported_last_7days_per100000_population: int=0,
              deaths_newly_reported_in_last24hours: int=0) -> None:
     with sqlite3.connect('covidcases.db') as conn:
+        now = dt.now()
+        formatted_now = f'{now.year}-{now.month}-{now.day}'
         cursor = conn.cursor()
-        print(country)
         cursor.execute('''
         INSERT INTO covidcases VALUES(
-        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         );
         ''', (country,
               region,
@@ -28,14 +33,13 @@ def save_row(country: str,
               deaths_cumulative_total_per_100000_population,
               deaths_newly_reported_last_7days,
               deaths_newly_reported_last_7days_per100000_population,
-              deaths_newly_reported_in_last24hours,))
+              deaths_newly_reported_in_last24hours,
+              formatted_now,))
         conn.commit()
         cursor.close()
-data = pd.read_csv('sampledata.csv')
-print('saving data, please wait\n[')
+data = pd.read_csv('sampledata.csv').dropna()
+print('saving data, please wait')
 for _, row in data.iterrows():
     clean = row.tolist()[:-1:]
     save_row(*clean)
-    print('-', sep='')
-print(']')
-print('saving complete')
+print("Data saved")
