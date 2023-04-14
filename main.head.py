@@ -6,7 +6,8 @@ def get_csv(url: str) -> pd.DataFrame:
     with requests.get(url) as response:
         if response.status_code == 200:
             content = response.content.decode()
-            return pd.read_csv(StringIO(content)).dropna()
+            df = pd.read_csv(StringIO(content)).dropna()
+            return df
         else:
             raise ValueError(f'status code -> {response.status_code}')
 def save_row(country: str,
@@ -33,8 +34,7 @@ def save_row(country: str,
               cases_total_cumulative_per100000,
               cases_reported_last7days,
               cases_newly_reported_last7days_per_100000,
-              newly_reported_cases_last24hours,
-              deaths_cumulative_total,
+              newly_reported_cases_last24hours, deaths_cumulative_total,
               deaths_cumulative_total_per_100000_population,
               deaths_newly_reported_last_7days,
               deaths_newly_reported_last_7days_per100000_population,
